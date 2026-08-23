@@ -149,12 +149,6 @@ TASK python:venv:purge python:venv:deactivate, {
 # ################################ INTERNALS ###################################
 
 function __InvokeBuild::Builder::PythonVenv::RequirementsFile {
-    [CmdletBinding(PositionalBinding = $false)]
-    param (
-        [Parameter()]
-        [switch]
-        $Xxx
-    )
     $INVOKE = $script:__InvokeBuild
     $BUILDER = $INVOKE::Builder::PythonVenv
 

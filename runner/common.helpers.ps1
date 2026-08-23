@@ -8,7 +8,7 @@
 
 function Join-Paths {
     [CmdletBinding(PositionalBinding = $false)]
-    param(
+    param (
         [Parameter(Mandatory, Position = 0, ValueFromRemainingArguments)]
         [string[]]
         $Paths
@@ -25,7 +25,7 @@ function Join-Paths {
 
 function Out-FileUTF8NoBOM {
     [CmdletBinding(PositionalBinding = $false)]
-    param(
+    param (
         [Parameter(Mandatory, Position = 0)]
         [string]
         $FilePath,
@@ -69,7 +69,7 @@ function Out-FileUTF8NoBOM {
 
 function Test-JsonObject {
     [CmdletBinding(PositionalBinding = $false)]
-    param(
+    param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [object]
         $Object,
@@ -84,7 +84,7 @@ function Test-JsonObject {
 
 function Select-JsonObject {
     [CmdletBinding(PositionalBinding = $false)]
-    param(
+    param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [object]
         $Object,
@@ -109,7 +109,7 @@ function Select-JsonObject {
 
 function Set-JsonObject {
     [CmdletBinding(PositionalBinding = $false)]
-    param(
+    param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [object]
         $Object,
@@ -127,7 +127,7 @@ function Set-JsonObject {
 
 function Expand-JsonObject {
     [CmdletBinding(PositionalBinding = $false, DefaultParameterSetName = "Items")]
-    param(
+    param (
         [Parameter(Mandatory, ValueFromPipeline)]
         [object]
         $Object,
