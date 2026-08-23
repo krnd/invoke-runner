@@ -26,6 +26,12 @@ $script:__InvokeBuild = @{
     Arguments = $InvokeBuildRemainingArguments
     Paths     = @(
         ".",
+        # !![ INVOKERUNNER::BEGIN ]!!
+        "core",
+        "cxx",
+        "python",
+        "tools",
+        # !![ INVOKERUNNER::END ]!!
         ".invoke",
         ".invokebuild",
         ".invokerunner",
@@ -121,6 +127,9 @@ INVOKEBUILD:SETUP -ExecuteAll
 foreach ($SearchPath in $script:__InvokeBuild::Paths) {
     if (Test-Path $SearchPath -PathType Container) {
         Get-ChildItem $SearchPath -Filter "*.build.ps1" | ForEach-Object {
+            # !![ INVOKERUNNER::BEGIN ]!!
+            if ($_.Name -eq ".build.ps1") { return }
+            # !![ INVOKERUNNER::END ]!!
             if ($_.FullName -eq $MyInvocation.MyCommand.Definition) {
                 return
             }
