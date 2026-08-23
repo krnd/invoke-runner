@@ -1,4 +1,4 @@
-@REM invokerunner.update.bat 2.1
+@REM invokerunner.update.bat 2.2
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -29,6 +29,11 @@ REM =============================< PowerShell >=================================
 Write-Host "==========[ Invoke-Build Updater ]=========="
 Write-Host
 
+# Avoid HTTPS handshake failures with modern web servers.
+[Net.ServicePointManager]::SecurityProtocol = `
+    [Net.ServicePointManager]::SecurityProtocol `
+    -bor [Net.SecurityProtocolType]::Tls12
+
 $Paths = @(
     ".",
     ".invoke",
@@ -47,9 +52,20 @@ $Providers = if ($null -ne $env:INVOKE_BUILD_UPDATER_PROVIDERS) {
 } else {
     @($DefaultProvider)
 }
-$Providers = ($Providers -replace "...", $DefaultProvider) | ForEach-Object {
-    [Environment]::ExpandEnvironmentVariables($_)
-}
+$Providers = @(
+    $Providers | ForEach-Object {
+        $Provider = $_.Trim()
+        if ([string]::IsNullOrEmpty($Provider)) {
+            return
+        } elseif ($Provider -eq "...") {
+            $Provider = $DefaultProvider
+        } elseif (-not $Provider.Contains("{}")) {
+            Write-Warning "Malformed provider '$Provider'."
+            return
+        }
+        [Environment]::ExpandEnvironmentVariables($Provider)
+    }
+)
 
 $Paths | ForEach-Object {
     Get-ChildItem $_ `
@@ -72,7 +88,7 @@ $Paths | ForEach-Object {
 
     $RelativePath = $(Resolve-Path -Relative $_.FullName) `
         -replace "\\", "/"
-    if ($RelativePath.StartsWith(".\")) {
+    if ($RelativePath.StartsWith("./")) {
         $RelativePath = $RelativePath.Substring(2)
     }
 
@@ -83,20 +99,23 @@ $Paths | ForEach-Object {
 
         $UpdateStep = "download"
         $ThrowException = $null
-        foreach ($Item in $Providers) {
-            if ($null -eq $Item) {
-                continue
-            }
+        foreach ($Provider in $Providers) {
+            $Source = $Provider.Replace("{}", $_.Name)
             try {
-                if ($Item.StartsWith("https://")) {
+                if ($Provider -match "^https?://") {
                     Invoke-WebRequest `
-                        -Uri ($Item -replace "{}", $_.Name) `
-                        -OutFile $_.FullName
+                        -Uri $Source `
+                        -OutFile $_.FullName `
+                        -UseBasicParsing `
+                        -ErrorAction Stop
                 } else {
-                    Copy-Path `
-                        -Path ($Item -replace "{}", $_.Name) `
-                        -Destination $_.FullName
+                    Copy-Item `
+                        -LiteralPath $Source `
+                        -Destination $_.FullName `
+                        -ErrorAction Stop
                 }
+                $ThrowException = $null
+                break
             } catch {
                 if ($null -eq $ThrowException) {
                     $ThrowException = $_.Exception
@@ -112,8 +131,8 @@ $Paths | ForEach-Object {
 
         $UpdateStep = "convert"
         (Get-Content $_.FullName -Raw) `
-            -replace "`n", "`r`n" `
-        | Set-Content -Path $_.FullName
+            -replace '\r?\n', "`r`n" `
+        | Set-Content -Path $_.FullName -NoNewline
 
         Write-Host "OK"
 
