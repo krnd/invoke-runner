@@ -1,4 +1,4 @@
-# config.plugin.ps1 1.4
+# config.plugin.ps1 1.5
 #Requires -Version 5.1
 
 
@@ -172,13 +172,17 @@ function __InvokeBuild::Plugin::Config::*GET {
     param (
         [Parameter(Mandatory, Position = 0)]
         [string]
-        $Name
+        $Name,
+        [Parameter()]
+        [object]
+        $Default = $null
     )
     $INVOKE = $script:__InvokeBuild
     $PLUGIN = $INVOKE::Plugin::Config
     $STORAGE = $PLUGIN::Storage
 
     if (-not $STORAGE.ContainsKey($Name)) {
+        if ($null -ne $Default) { return $Default }
         throw "[$($PLUGIN::Prefix):GET] " `
             + "Configuration value '$Name' not found."
     }
