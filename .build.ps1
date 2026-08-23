@@ -27,10 +27,7 @@ $script:__InvokeBuild = @{
     Paths     = @(
         ".",
         # !![ INVOKERUNNER::BEGIN ]!!
-        "core",
-        "cxx",
-        "python",
-        "tools",
+        "runner",
         # !![ INVOKERUNNER::END ]!!
         ".invoke",
         ".invokebuild",
