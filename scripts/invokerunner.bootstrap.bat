@@ -1,4 +1,4 @@
-@REM invokerunner.bootstrap.bat 1.1
+@REM invokerunner.bootstrap.bat 1.2
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -62,7 +62,7 @@ $Paths | ForEach-Object {
 
     $RelativePath = $(Resolve-Path -Relative $_.FullName) `
         -replace "\\", "/"
-    if ($RelativePath.StartsWith(".\")) {
+    if ($RelativePath.StartsWith("./")) {
         $RelativePath = $RelativePath.Substring(2)
     }
 
