@@ -1,14 +1,19 @@
-# python.venv.build.ps1 3.0
+# python.venv.build.ps1 3.1
 #Requires -Version 5.1
 
 
 # ################################ VARIABLES ###################################
 
-$script:__InvokeBuild::Builder["python.venv"] = @{
-    LockfileExtension = @{
-        ".in"  = ".txt"
-        ".pip" = ".lock"
-    }
+$script:__InvokeBuild::Builder::PythonVenv = @{
+    RequirementsFileExtensions = @(
+        ".lock",
+        ".txt",
+        ".pip"
+    )
+    RequirementsFilePaths = @(
+        ".",
+        ".config"
+    )
 }
 
 
@@ -25,7 +30,7 @@ CONFIGURE python.venv.path `
     -Default ".venv"
 
 CONFIGURE python.venv.requirements `
-    -Default "requirements.txt"
+    -Default $null
 
 CONFIGURE python.venv.sitecustomize `
     -Default $null
@@ -105,7 +110,7 @@ TASK python:venv:create python:venv:deactivate, {
 }
 
 TASK python:venv:install python:venv:activate, {
-    $Requirements = (CONF python.venv.requirements)
+    $Requirements = __InvokeBuild::Builder::PythonVenv::RequirementsFile
     if (Test-Path $Requirements -PathType Leaf) {
         EXEC {
             pip install `
@@ -124,7 +129,7 @@ TASK python:venv:reinstall python:venv:activate, {
             --quiet
     }
 }, {
-    $Requirements = (CONF python.venv.requirements)
+    $Requirements = __InvokeBuild::Builder::PythonVenv::RequirementsFile
     if (Test-Path $Requirements -PathType Leaf) {
         EXEC {
             pip install `
@@ -138,4 +143,33 @@ TASK python:venv:reinstall python:venv:activate, {
 
 TASK python:venv:purge python:venv:deactivate, {
     REMOVE (CONF python.venv.path)
+}
+
+
+# ################################ INTERNALS ###################################
+
+function __InvokeBuild::Builder::PythonVenv::RequirementsFile {
+    [CmdletBinding(PositionalBinding = $false)]
+    param (
+        [Parameter()]
+        [switch]
+        $Xxx
+    )
+    $INVOKE = $script:__InvokeBuild
+    $BUILDER = $INVOKE::Builder::PythonVenv
+
+    if (CONFIG:HAS python.venv.requirements) {
+        return (CONF python.venv.requirements)
+    }
+
+    foreach ($SearchPath in $BUILDER::RequirementsFilePaths) {
+        foreach ($Extension in $BUILDER::RequirementsFileExtensions) {
+            $File = (Join-Path $SearchPath "requirements$Extension")
+            if (Test-Path $File -Type Leaf) {
+                return $File
+            }
+        }
+    }
+
+    return "requirements.txt"
 }
