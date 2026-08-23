@@ -1,0 +1,3 @@
+# CLAUDE
+
+@../.stash/CLAUDE.md

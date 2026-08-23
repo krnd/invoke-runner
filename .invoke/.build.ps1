@@ -4,8 +4,6 @@
 # ################################ TASKS #######################################
 
 TASK stash {
-    EXEC {
-        Start-Process ".stash/synchronize.bat" `
-            -WorkingDirectory ".stash"
-    }
+    Start-Process "./.stash/stash.bat" `
+        -WorkingDirectory "./.stash"
 }
