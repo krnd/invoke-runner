@@ -1,4 +1,4 @@
-@REM invokerunner.bootstrap.bat 1.2
+@REM invokerunner.unblock.bat 1.3
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -26,7 +26,7 @@ REM Remove the file itself.
 REM =============================< PowerShell >=================================
 #Requires -Version 5.1
 
-Write-Host "==========[ Invoke-Build Bootstrapper ]=========="
+Write-Host "==========[ UNBLOCKER ]=========="
 Write-Host
 
 $Paths = @(

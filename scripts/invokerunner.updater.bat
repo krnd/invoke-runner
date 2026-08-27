@@ -1,4 +1,4 @@
-@REM invokerunner.update.bat 2.3
+@REM invokerunner.updater.bat 2.4
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -26,7 +26,7 @@ REM Remove the file itself.
 REM =============================< PowerShell >=================================
 #Requires -Version 5.1
 
-Write-Host "==========[ Invoke-Build Updater ]=========="
+Write-Host "==========[ UPDATER ]=========="
 Write-Host
 
 # Avoid HTTPS handshake failures with modern web servers.
