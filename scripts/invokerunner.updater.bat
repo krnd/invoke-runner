@@ -1,4 +1,4 @@
-@REM invokerunner.updater.bat 2.4
+@REM invokerunner.updater.bat 2.5
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -46,7 +46,7 @@ $Paths = @(
     "invoke-runner"
 )
 
-$DefaultProvider = "https://raw.githubusercontent.com/krnd/invoke-runner/main/runner/{}"
+$DefaultProvider = "https://raw.githubusercontent.com/krnd/invoke-runner/main/runners/{}"
 $Providers = if ($null -ne $env:INVOKE_BUILD_UPDATER_PROVIDERS) {
     ($env:INVOKE_BUILD_UPDATER_PROVIDERS -split ";")
 } else {
