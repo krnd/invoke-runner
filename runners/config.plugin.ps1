@@ -75,7 +75,7 @@ INVOKEBUILD:SETUP {
 
 function __InvokeBuild::Plugin::Config::*LOAD {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = "Values")]
         [hashtable]
         $Values,
@@ -107,7 +107,7 @@ Set-Alias CONFIG:LOAD __InvokeBuild::Plugin::Config::*LOAD
 
 function __InvokeBuild::Plugin::Config::*VALUE {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name,
@@ -132,7 +132,7 @@ Set-Alias CONFIGURE __InvokeBuild::Plugin::Config::*VALUE
 
 function __InvokeBuild::Plugin::Config::*HAS {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name
@@ -149,7 +149,7 @@ Set-Alias CONFIG:HAS __InvokeBuild::Plugin::Config::*HAS
 
 function __InvokeBuild::Plugin::Config::*SET {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name,
@@ -169,7 +169,7 @@ Set-Alias CONFIG:SET __InvokeBuild::Plugin::Config::*SET
 
 function __InvokeBuild::Plugin::Config::*GET {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name,
@@ -205,7 +205,7 @@ Set-Alias CONF __InvokeBuild::Plugin::Config::*GET
 
 function __InvokeBuild::Plugin::Config::Load {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Source,

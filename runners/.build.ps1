@@ -4,7 +4,7 @@
 
 # ################################ ARGUMENTS ###################################
 [CmdletBinding()]
-param (
+param(
     [Parameter(ValueFromRemainingArguments)]
     [string[]]
     $InvokeBuildRemainingArguments
@@ -42,7 +42,7 @@ $script:__InvokeBuild = @{
 
 function __InvokeBuild::*SETUP {
     [CmdletBinding(PositionalBinding = $false, DefaultParameterSetName = "script")]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0, ParameterSetName = "script")]
         [scriptblock]
         $Script,

@@ -54,7 +54,7 @@ INVOKEBUILD:SETUP {
 
 function __InvokeBuild::Plugin::Argument::*GET {
     [CmdletBinding(PositionalBinding = $false, DefaultParameterSetName = "Any")]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name,

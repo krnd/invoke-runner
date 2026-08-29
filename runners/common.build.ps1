@@ -6,7 +6,7 @@
 
 function __InvokeBuild::IsTaskDefined {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name
@@ -16,7 +16,7 @@ function __InvokeBuild::IsTaskDefined {
 
 function __InvokeBuild::IsTaskMissing {
     [CmdletBinding(PositionalBinding = $false)]
-    param (
+    param(
         [Parameter(Mandatory, Position = 0)]
         [string]
         $Name
