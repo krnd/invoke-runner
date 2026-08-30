@@ -83,7 +83,7 @@ $RECYCLE.BIN/
 ~*
 
 ### STASH ###
-/.stash
+/.stash/
 
 ### KEEPER ###
 !.gitkeep
