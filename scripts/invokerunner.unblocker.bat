@@ -1,4 +1,4 @@
-@REM invokerunner.unblock.bat 1.3
+@REM invokerunner.unblocker.bat 1.4
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -40,40 +40,44 @@ $Paths = @(
     "invoke-build",
     "invoke-runner"
 )
+$Filters = @(
+    "*.build.ps1",
+    "*.plugin.ps1",
+    "*.extension.ps1",
+    "*.helpers.ps1"
+)
 
 $Paths | ForEach-Object {
-    Get-ChildItem $_ `
-        -Filter "*.build.ps1" `
-        -ErrorAction Continue `
-        2> $null
-    Get-ChildItem $_ `
-        -Filter "*.plugin.ps1" `
-        -ErrorAction Continue `
-        2> $null
-    Get-ChildItem $_ `
-        -Filter "*.extension.ps1" `
-        -ErrorAction Continue `
-        2> $null
-    Get-ChildItem $_ `
-        -Filter "*.helpers.ps1" `
-        -ErrorAction Continue `
-        2> $null
+    $SearchPath = $_
+    $Filters | ForEach-Object {
+        Get-ChildItem $SearchPath `
+            -Filter $_ `
+            -ErrorAction SilentlyContinue
+    }
 } | ForEach-Object {
 
-    $RelativePath = $(Resolve-Path -Relative $_.FullName) `
-        -replace "\\", "/"
-    if ($RelativePath.StartsWith("./")) {
-        $RelativePath = $RelativePath.Substring(2)
+    $Name = $_.Name
+    $FullName = $_.FullName
+
+    $Path = $(Resolve-Path -Relative $FullName)
+    $Path = $Path.Replace('\', '/')
+    if ($Path.StartsWith("./")) {
+        $Path = $Path.Substring(2)
     }
 
-    Write-Host -NoNewline "Unblocking '$RelativePath' ... "
-
+    Write-Host "Unblocking '$Path' ... " `
+        -NoNewline
     try {
-        Unblock-File $_.FullName
-        Write-Host "OK"
+
+        Unblock-File $FullName `
+            -ErrorAction Stop
+
+        Write-Host "OK" `
+            -ForegroundColor Green
+
     } catch {
-        Write-Host "FAILED"
-        Write-Warning "Failed to unblock '$RelativePath'."
+        Write-Host "FAILED" `
+            -ForegroundColor Red
     }
 
 }

@@ -31,9 +31,6 @@ Write-Host
 
 $Provider = "https://api.github.com/repos/krnd/invoke-runner/contents/runners"
 
-Write-Host $Provider
-Write-Host
-
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
 

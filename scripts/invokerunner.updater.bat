@@ -1,4 +1,4 @@
-@REM invokerunner.updater.bat 2.5
+@REM invokerunner.updater.bat 2.6
 @ECHO OFF
 
 REM Write the PowerShell script.
@@ -29,11 +29,6 @@ REM =============================< PowerShell >=================================
 Write-Host "==========[ UPDATER ]=========="
 Write-Host
 
-# Avoid HTTPS handshake failures with modern web servers.
-[Net.ServicePointManager]::SecurityProtocol = `
-    [Net.ServicePointManager]::SecurityProtocol `
-    -bor [Net.SecurityProtocolType]::Tls12
-
 $Paths = @(
     ".",
     ".invoke",
@@ -45,6 +40,17 @@ $Paths = @(
     "invoke-build",
     "invoke-runner"
 )
+$Filters = @(
+    "*.build.ps1",
+    "*.plugin.ps1",
+    "*.extension.ps1",
+    "*.helpers.ps1"
+)
+
+# Avoid HTTPS handshake failures with modern web servers.
+[Net.ServicePointManager]::SecurityProtocol = `
+    [Net.ServicePointManager]::SecurityProtocol `
+    -bor [Net.SecurityProtocolType]::Tls12
 
 $DefaultProvider = "https://raw.githubusercontent.com/krnd/invoke-runner/main/runners/{}"
 $Providers = if ($null -ne $env:INVOKE_BUILD_UPDATER_PROVIDERS) {
@@ -60,58 +66,53 @@ $Providers = @(
         } elseif ($Provider -eq "...") {
             $Provider = $DefaultProvider
         } elseif (-not $Provider.Contains("{}")) {
-            Write-Warning "Malformed provider '$Provider'."
+            Write-Host "Malformed provider '$Provider'." `
+                -ForegroundColor DarkYellow
             return
         }
         [Environment]::ExpandEnvironmentVariables($Provider)
     }
 )
 
+$UTF8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+
 $Paths | ForEach-Object {
-    Get-ChildItem $_ `
-        -Filter "*.build.ps1" `
-        -ErrorAction Continue `
-        2> $null
-    Get-ChildItem $_ `
-        -Filter "*.plugin.ps1" `
-        -ErrorAction Continue `
-        2> $null
-    Get-ChildItem $_ `
-        -Filter "*.extension.ps1" `
-        -ErrorAction Continue `
-        2> $null
-    Get-ChildItem $_ `
-        -Filter "*.helpers.ps1" `
-        -ErrorAction Continue `
-        2> $null
+    $SearchPath = $_
+    $Filters | ForEach-Object {
+        Get-ChildItem $SearchPath `
+            -Filter $_ `
+            -ErrorAction SilentlyContinue
+    }
 } | ForEach-Object {
 
-    $RelativePath = $(Resolve-Path -Relative $_.FullName) `
-        -replace "\\", "/"
-    if ($RelativePath.StartsWith("./")) {
-        $RelativePath = $RelativePath.Substring(2)
+    $Name = $_.Name
+    $FullName = $_.FullName
+
+    $Path = $(Resolve-Path -Relative $FullName)
+    $Path = $Path.Replace('\', '/')
+    if ($Path.StartsWith("./")) {
+        $Path = $Path.Substring(2)
     }
 
-    Write-Host -NoNewline "Updating '$RelativePath' ... "
-
-    $UpdateStep = $null
+    Write-Host "Updating '$Path' ... " `
+        -NoNewline
     try {
 
-        $UpdateStep = "download"
+        $Step = "download"
         $ThrowException = $null
         foreach ($Provider in $Providers) {
-            $Source = $Provider.Replace("{}", $_.Name)
+            $Source = $Provider.Replace("{}", $Name)
             try {
                 if ($Provider -match "^https?://") {
                     Invoke-WebRequest `
                         -Uri $Source `
-                        -OutFile $_.FullName `
+                        -OutFile $FullName `
                         -UseBasicParsing `
                         -ErrorAction Stop
                 } else {
                     Copy-Item `
                         -LiteralPath $Source `
-                        -Destination $_.FullName `
+                        -Destination $FullName `
                         -ErrorAction Stop
                 }
                 $ThrowException = $null
@@ -126,19 +127,29 @@ $Paths | ForEach-Object {
             throw $ThrowException
         }
 
-        $UpdateStep = "unblock"
-        Unblock-File $_.FullName
+        $Step = "unblock"
+        Unblock-File $FullName `
+            -ErrorAction Stop
 
-        $UpdateStep = "convert"
-        (Get-Content $_.FullName -Raw) `
-            -replace '\r?\n', "`r`n" `
-        | Set-Content -Path $_.FullName -NoNewline
+        $Step = "crlf"
+        [IO.File]::WriteAllText(
+            $FullName,
+            ([IO.File]::ReadAllText($FullName) `
+                -replace '\r?\n', "`r`n"),
+            $UTF8NoBomEncoding
+        )
 
-        Write-Host "OK"
+        Write-Host "OK" `
+            -ForegroundColor Green
 
     } catch {
-        Write-Host "FAILED"
-        Write-Warning "Failed to update '$RelativePath'. ($UpdateStep)"
+        Write-Host "FAILED" `
+            -ForegroundColor Red `
+            -NoNewline
+        Write-Host " ($Step)" `
+            -ForegroundColor DarkGray
+        Write-Host $_.Exception.Message `
+            -ForegroundColor DarkYellow
     }
 
 }
