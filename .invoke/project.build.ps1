@@ -4,6 +4,6 @@
 # ################################ TASKS #######################################
 
 TASK stash {
-    Start-Process "./.stash/stash.bat" `
-        -WorkingDirectory "./.stash"
+    Start-Process ".stash/stash.bat" `
+        -WorkingDirectory ".stash"
 }

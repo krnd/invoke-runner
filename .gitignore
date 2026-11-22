@@ -82,8 +82,11 @@ $RECYCLE.BIN/
 *~.*
 ~*
 
-### STASH ###
+# Local Files
+*.local.*
+# Personal Stash
 /.stash/
+
 
 ### KEEPER ###
 !.gitkeep
