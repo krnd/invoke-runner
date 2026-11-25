@@ -1,4 +1,4 @@
-# localfile.plugin.ps1 1.3
+# localfile.plugin.ps1 2.0
 #Requires -Version 5.1
 
 
@@ -12,6 +12,41 @@ $script:__InvokeBuild::Plugin::LocalFile = @{
 
 # ################################ FUNCTIONS ###################################
 
+# .SYNOPSIS
+#   Installs a local file from its most specific variant.
+#
+# .DESCRIPTION
+#   A file 'filename.ext' is installed as 'filename.local.ext' from its first
+#   existing variant. Variants are selected from most to least specific.
+#   - 'filename.user.workspace.ext'
+#   - 'filename.user.ext'
+#   - 'filename.workspace.ext'
+#   - 'filename.default.ext'
+#
+# .PARAMETER File
+#   Name of the file the variants and installed file are based on.
+# .PARAMETER Path
+#   Directory to install the file into.
+# .PARAMETER Source
+#   Directory to search for variants.
+#   (Defaults to -Path.)
+# .PARAMETER User
+#   User name used to select a variant.
+#   (Combined with -Workspace when specified.)
+# .PARAMETER Workspace
+#   Workspace name used to select a variant.
+#   (Combined with -User when specified.)
+# .PARAMETER Default
+#   Default name used to select a variant.
+# .PARAMETER InPlace
+#   Installs under the file name itself.
+#   (Without the '.local' suffix.)
+# .PARAMETER Optional
+#   Skips instead of failing if no variant is found.
+# .PARAMETER PostScript
+#   Script block run on the installed file.
+#   (Skipped for the default variant.)
+#
 function __InvokeBuild::Plugin::LocalFile::*INSTALL {
     [CmdletBinding(PositionalBinding = $false)]
     param(
@@ -36,10 +71,13 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
         $Workspace,
         [Parameter()]
         [string]
-        $Fallback,
+        $Default,
         [Parameter()]
         [switch]
-        $Plain,
+        $InPlace,
+        [Parameter()]
+        [switch]
+        $Optional,
         [Parameter()]
         [scriptblock]
         $PostScript
@@ -49,34 +87,39 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
 
     $WithUser = (-not [string]::IsNullOrEmpty($User))
     $WithWorkspace = (-not [string]::IsNullOrEmpty($Workspace))
-    if (-not $WithUser -and -not $WithWorkspace -and -not $Fallback) {
+    if (-not $WithUser -and -not $WithWorkspace -and -not $Default) {
+        if ($Optional) {
+            return
+        }
         throw "[$($PLUGIN::Prefix):INSTALL] " `
             + "No variant specified."
     }
 
-    $Name = [System.IO.Path]::GetFileNameWithoutExtension($File)
+    $File = [System.IO.Path]::GetFileName($File)
+
+    $BaseName = [System.IO.Path]::GetFileNameWithoutExtension($File)
     $Extension = [System.IO.Path]::GetExtension($File)
-    if ($Plain) {
-        $TargetFile = "$Name" + $Extension
+    if ($InPlace) {
+        $DestinationFile = $File
     } else {
-        $TargetFile = "$Name.local" + $Extension
+        $DestinationFile = "$BaseName.local" + $Extension
     }
 
     $VariantFiles = @()
     if ($WithUser -and $WithWorkspace) {
-        $VariantFiles += "$Name.$User.$Workspace" + $Extension
+        $VariantFiles += "$BaseName.$User.$Workspace" + $Extension
     }
     if ($WithUser) {
-        $VariantFiles += "$Name.$User" + $Extension
+        $VariantFiles += "$BaseName.$User" + $Extension
     }
     if ($WithWorkspace) {
-        $VariantFiles += "$Name.$Workspace" + $Extension
+        $VariantFiles += "$BaseName.$Workspace" + $Extension
     }
-    if ($Fallback) {
-        $FallbackFile = "$Name.$Fallback" + $Extension
-        $VariantFiles += $FallbackFile
+    if ($Default) {
+        $DefaultFile = "$BaseName.$Default" + $Extension
+        $VariantFiles += $DefaultFile
     } else {
-        $FallbackFile = $null
+        $DefaultFile = $null
     }
 
     if (-not $Path) {
@@ -85,10 +128,10 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
         throw "[$($PLUGIN::Prefix):INSTALL] " `
             + "Path '$Path' not found."
     }
-    $TargetPath = (Resolve-Path $Path).Path
+    $DestinationPath = (Resolve-Path $Path).Path
 
     if (-not $Source) {
-        $Source = $TargetPath
+        $Source = $DestinationPath
     } elseif (-not (Test-Path $Source -PathType Container)) {
         throw "[$($PLUGIN::Prefix):INSTALL] " `
             + "Source path '$Source' not found."
@@ -100,9 +143,9 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
         $FilePath = (Join-Path $SourcePath $SourceFile)
         if (Test-Path $FilePath -PathType Leaf) {
             $Item = Copy-Item $FilePath `
-                -Destination (Join-Path $TargetPath $TargetFile) `
+                -Destination (Join-Path $DestinationPath $DestinationFile) `
                 -Force -PassThru
-            if ($PostScript -and ($SourceFile -ne $FallbackFile)) {
+            if ($PostScript -and ($SourceFile -ne $DefaultFile)) {
                 $Item | ForEach-Object $PostScript
             }
             break
@@ -110,6 +153,9 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
     }
 
     if ($null -eq $Item) {
+        if ($Optional) {
+            return
+        }
         throw "[$($PLUGIN::Prefix):INSTALL] " `
             + "No variant of '$File' found."
     }
