@@ -1,4 +1,4 @@
-# localfile.plugin.ps1 2.0
+# localfile.plugin.ps1 2.1
 #Requires -Version 5.1
 
 
@@ -25,8 +25,10 @@ $script:__InvokeBuild::Plugin::LocalFile = @{
 #
 # .PARAMETER File
 #   Name of the file the variants and installed file are based on.
+#   (May include a directory, used when -Path is not specified.)
 # .PARAMETER Path
 #   Directory to install the file into.
+#   (Defaults to the directory of -File, or the current directory.)
 # .PARAMETER Source
 #   Directory to search for variants.
 #   (Defaults to -Path.)
@@ -53,7 +55,7 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
         [Parameter(Mandatory, Position = 0)]
         [string]
         $File,
-        [Parameter(Mandatory)]
+        [Parameter()]
         [string]
         $Path,
         [Parameter()]
@@ -95,7 +97,14 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
             + "No variant specified."
     }
 
-    $File = [System.IO.Path]::GetFileName($File)
+    if (-not $Path) {
+        $Path = [System.IO.Path]::GetDirectoryName($File)
+    }
+    if (-not $Path) {
+        $Path = "."
+    }
+
+    $File =[System.IO.Path]::GetFileName($File)
 
     $BaseName = [System.IO.Path]::GetFileNameWithoutExtension($File)
     $Extension = [System.IO.Path]::GetExtension($File)
@@ -122,9 +131,7 @@ function __InvokeBuild::Plugin::LocalFile::*INSTALL {
         $DefaultFile = $null
     }
 
-    if (-not $Path) {
-        $Path = "."
-    } elseif (-not (Test-Path $Path -PathType Container)) {
+    if (-not (Test-Path $Path -PathType Container)) {
         throw "[$($PLUGIN::Prefix):INSTALL] " `
             + "Path '$Path' not found."
     }
